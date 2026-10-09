@@ -1,6 +1,6 @@
 # Tokito YTDL 🧊
 
-**v1.0.0** · Biblioteca Node.js · **Dylan Modz**
+**v1.0.1** · Biblioteca Node.js · **Dylan Modz**
 
 Biblioteca para pesquisar vídeos, consultar informações, gerar links temporários de áudio/vídeo e baixar arquivos MP3/MP4 do YouTube.
 
@@ -8,7 +8,7 @@ Biblioteca para pesquisar vídeos, consultar informações, gerar links temporá
 
 ## Requisitos
 
-- Node.js 18+
+- Node.js 22+ (necessário para o suporte EJS via Node)
 - yt-dlp instalado no PATH: https://github.com/yt-dlp/yt-dlp
 - FFmpeg para converter MP3 e combinar áudio/vídeo MP4
 - Internet e acesso ao YouTube
@@ -81,3 +81,16 @@ Os testes simulam o executável yt-dlp e **não garantem um download real do You
 Use apenas mídias que você tenha permissão para acessar e baixar.
 
 MIT © 2026 Dylan Modz
+
+## Correção 1.0.1: extração no Termux
+
+O módulo agora ativa `--js-runtimes node` para o yt-dlp e preserva avisos úteis de diagnóstico. No Termux instale:
+
+```sh
+pkg install python python-pip ffmpeg -y
+python -m pip install -U "yt-dlp[default]"
+yt-dlp --version
+ffmpeg -version
+```
+
+O `yt-dlp` é um programa separado e não é instalado pelo `npm install` deste pacote. Comportamento real depende do YouTube, rede, runtime e versão do extrator.
