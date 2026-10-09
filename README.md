@@ -66,17 +66,21 @@ Em um servidor Linux, instale os mesmos executáveis pelo gerenciador apropriado
 ```js
 const yt = require('tokito-ytdl')
 
-const busca = await yt.search('lofi hip hop', 3)
-console.log(busca.results)
+async function main() {
+  const busca = await yt.search('lofi hip hop', 3)
+  console.log(busca.results)
 
-const link = busca.results[0]?.url
-if (link) {
+  const link = busca.results[0]?.url
+  if (!link) return
+
   const info = await yt.info(link)
   console.log(info.title, info.channel, info.duration)
 
   const arquivo = await yt.mp3(link, { quality: 128 })
   console.log(arquivo.path)
 }
+
+main().catch(console.error)
 ```
 
 ### ESM — projetos com `"type": "module"`
