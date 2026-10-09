@@ -4,7 +4,7 @@
 
 **Biblioteca Node.js para pesquisa, metadados e download de áudio e vídeo do YouTube.**
 
-![Version](https://img.shields.io/badge/version-1.0.1-38bdf8?style=flat-square)
+![Version](https://img.shields.io/badge/version-1.1.0-38bdf8?style=flat-square)
 ![Node](https://img.shields.io/badge/Node.js-22%2B-43853d?style=flat-square)
 ![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)
 
@@ -22,6 +22,7 @@
 - 🎬 **Vídeo**: obtenha a URL temporária do fluxo de vídeo.
 - 📥 **MP3**: converta e salve áudio no disco.
 - 📹 **MP4**: baixe e salve vídeo no disco.
+- ⏱️ **GitHub temporário (experimental)**: upload e exclusão programada em 60 segundos.
 - ⚙️ **Node.js**: uso em bots, aplicações e APIs.
 
 ## 📦 Instalação
@@ -136,7 +137,75 @@ Exemplo de resposta de pesquisa:
 
 *O JSON acima é ilustrativo; os dados reais dependem do YouTube.*
 
+## ⏱️ Links temporários pelo GitHub (experimental)
+
+Este recurso é **opcional** e não altera os métodos atuais de busca, áudio ou vídeo.
+
+O Tokito YTDL pode baixar um MP3 ou MP4, enviar para um **GitHub Release público e temporário** e devolver uma URL do próprio github.com. O backend programa a **exclusão do Release e sua tag após 60 segundos**.
+
+### Configurar token
+
+1. Crie um [Personal Access Token (fine-grained)](https://github.com/settings/personal-access-tokens/new), com acesso **apenas a este repositório** e permissão **Contents: Read and write**.
+2. Configure o token **no servidor**, nunca no frontend nem no repositório público.
+3. Opcionalmente, configure outro repositório por meio da variável TOKITO_GITHUB_REPO.
+
+~~~bash
+export TOKITO_GITHUB_TOKEN="TOKEN_AQUI"
+export TOKITO_GITHUB_REPO="dylan-Modz/Tokito-YTDL-"
+~~~
+
+### Exemplo
+
+~~~js
+const yt = require('tokito-ytdl')
+
+// Execute uma vez na inicialização do backend:
+// procura e exclui Releases expirados que ficaram após reinícios.
+yt.startGithubCleanup()
+
+async function exemplo() {
+  const audio = await yt.githubAudio('https://youtu.be/VIDEO_ID')
+  console.log(audio.url, audio.expiresIn) // URL do GitHub, 60 segundos
+
+  const video = await yt.githubVideo('https://youtu.be/VIDEO_ID', { quality: 360 })
+  console.log(video.url)
+}
+
+exemplo().catch(console.error)
+~~~
+
+Também dá para enviar uma mídia MP3/MP4 já existente no disco:
+
+~~~js
+const resultado = await yt.githubFile('/caminho/meu-audio.mp3', { type: 'mp3' })
+console.log(resultado)
+~~~
+
+Exemplo **fictício** do retorno:
+
+~~~json
+{
+  "status": true,
+  "url": "https://github.com/dylan-Modz/Tokito-YTDL-/releases/download/tokito-temp-EXEMPLO/media-EXEMPLO.mp3",
+  "expiresIn": 60,
+  "expiresAt": "2026-10-09T23:00:00.000Z",
+  "temporary": true,
+  "provider": "github-releases"
+}
+~~~
+
+### Limitações
+
+- O GitHub **não oferece expiração nativa de URLs de Releases**. O backend precisa executar a exclusão; caches podem manter o link acessível depois.
+- Se o servidor parar, não há exclusão enquanto estiver desligado. A função **startGithubCleanup()** verifica o que venceu ao reiniciar e depois a cada 30 segundos.
+- Só são removidos Releases temporários do próprio módulo, nunca lançamentos convencionais.
+- Limite experimental de **48 MiB** por arquivo.
+- GitHub Releases é público. Não use para arquivos privados, nem para conteúdo sem autorização de publicação.
+- Muitas criações/exclusões podem exceder **limites e políticas do GitHub**. Não use o GitHub como CDN de uma API pública.
+- **Ainda não houve teste real de upload** com token desta conta. Faça um teste pequeno usando arquivo próprio primeiro.
+
 ## 🌐 Integração com APIs e sites
+
 
 É possível chamar o Tokito YTDL dentro de rotas Express ou outros servidores Node.js. Faça pesquisa e metadados no backend e transmita os arquivos baixados ao cliente por uma rota própria.
 
