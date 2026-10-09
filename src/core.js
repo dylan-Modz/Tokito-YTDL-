@@ -6,7 +6,7 @@ function run(args, timeout = 60000) {
   return new Promise((resolve, reject) => {
     const command = process.env.TOKITO_YTDLP || 'yt-dlp'
     const child = spawn(command, [
-      '--ignore-config', '--no-warnings', '--no-progress', ...args
+      '--ignore-config', '--no-progress', '--js-runtimes', 'node', ...args
     ], { windowsHide: true, shell: false })
 
     let stdout = ''
