@@ -1,0 +1,29 @@
+{
+  "name": "tokito-ytdl",
+  "version": "1.0.0",
+  "description": "Biblioteca Node.js para buscar e obter mídias do YouTube via yt-dlp.",
+  "main": "index.js",
+  "type": "commonjs",
+  "scripts": {
+    "test": "node --test"
+  },
+  "keywords": [
+    "tokito",
+    "youtube",
+    "ytdl",
+    "audio",
+    "video",
+    "downloader"
+  ],
+  "author": "Dylan Modz",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "index.js",
+    "src",
+    "README.md",
+    "LICENSE"
+  ]
+}
