@@ -28,6 +28,10 @@ const stub = [
 fs.writeFileSync(bin, stub)
 fs.chmodSync(bin, 0o755)
 process.env.TOKITO_YTDLP = bin
+const probe = path.join(root, 'fake-probe')
+fs.writeFileSync(probe, '#!/usr/bin/env node\nconsole.log(JSON.stringify({streams:[{codec_type:"video",codec_name:"h264",pix_fmt:"yuv420p"},{codec_type:"audio",codec_name:"aac"}]}))\n')
+fs.chmodSync(probe, 0o755)
+process.env.TOKITO_FFPROBE = probe
 
 test('API exportada', () => {
   for (const name of ['search', 'info', 'audio', 'video', 'mp3', 'mp4']) {
