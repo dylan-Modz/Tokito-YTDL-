@@ -22,7 +22,7 @@
 - 🎬 **Vídeo**: obtenha a URL temporária do fluxo de vídeo.
 - 📥 **MP3**: converta e salve áudio no disco.
 - 📹 **MP4**: baixe e salve vídeo no disco.
-- 📱 **MP4 compatível**: prioriza H.264/AAC, valida codecs com FFprobe e converte pelo FFmpeg somente se necessário.
+- 📱 **Vídeo compatível**: prepara o MP4 para reprodução em aplicativos como WhatsApp.
 - ⚙️ **Node.js**: uso em bots, aplicações e APIs.
 
 ## 📦 Instalação
@@ -116,11 +116,7 @@ console.log(video.path, video.size)
 
 ### Compatibilidade de vídeo para WhatsApp
 
-Desde a versão 1.0.2, mp4() prioriza as faixas **H.264/AVC** e **AAC** do YouTube. O módulo verifica cada arquivo com FFprobe; quando encontrar codecs incompatíveis, converte usando **libx264 + yuv420p** e **AAC** com FFmpeg e valida novamente antes de devolver o caminho.
-
-Isso reduz casos em que o WhatsApp recebe MP4 sem imagem ou sem reprodução, mas não resolve vídeos indisponíveis, falhas de rede e limites de tamanho do WhatsApp.
-
-**No Termux:** instale `pkg install ffmpeg` e confira se os comandos `ffmpeg`, `ffprobe` e o encoder `libx264` estão disponíveis. Conversões podem demorar em celulares, principalmente com vídeos longos ou alta resolução. Para bots, sugerimos começar com qualidade 480.
+Desde a versão 1.0.2, o módulo verifica os arquivos MP4 e faz os ajustes necessários para melhorar a reprodução nos aplicativos de mensagens. É necessário ter FFmpeg e FFprobe instalados; em aparelhos menos potentes, vídeos longos podem levar mais tempo para processar. Para bots, recomendamos começar com qualidade 480p.
 
 **Opções de download:** `quality` (MP3 em kbps; MP4 em altura máxima) e `outputDir` (diretório de saída).
 
