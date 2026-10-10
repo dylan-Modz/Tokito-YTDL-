@@ -4,6 +4,7 @@ const fs = require('node:fs/promises')
 const path = require('node:path')
 const { run } = require('./core')
 const { url, inteiro } = require('./validate')
+const { garantirMp4 } = require('./compat')
 
 const nome = '%(title).80s [%(id)s].%(ext)s'
 
@@ -42,12 +43,20 @@ async function mp4(link, options = {}) {
   const quality = inteiro(options?.quality, 720, 144, 2160, 'Resolução máxima (p)')
   const output = await preparar(options)
   const max = '[height<=' + quality + ']'
-  const format = 'bestvideo' + max + '[ext=mp4]+bestaudio[ext=m4a]/best' + max + '[ext=mp4]/best[ext=mp4]'
-  return resultado([
+  // Prefere H.264 + AAC, com fallback para outros formatos disponíveis.
+  const format =
+    'bestvideo' + max + '[vcodec^=avc1]+bestaudio[acodec^=mp4a]/' +
+    'best' + max + '[ext=mp4][vcodec^=avc1]/' +
+    'bestvideo' + max + '+bestaudio/best' + max
+  const baixado = await resultado([
     '--no-playlist', '-f', format, '--merge-output-format', 'mp4',
-    '--restrict-filenames', '-o', output,
+    '--recode-video', 'mp4', '--restrict-filenames', '-o', output,
     '--print', 'after_move:filepath', '--', valid
   ])
+  // Valida codec/pixel format; transcodifica apenas quando necessário.
+  const arquivo = await garantirMp4(baixado.path)
+  const stat = await fs.stat(arquivo)
+  return { status: true, path: arquivo, filename: path.basename(arquivo), size: stat.size }
 }
 
 module.exports = { mp3, mp4 }
