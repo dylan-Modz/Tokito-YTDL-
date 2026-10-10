@@ -1,7 +1,7 @@
 {
   "name": "tokito-ytdl",
-  "version": "1.0.2",
-  "description": "Biblioteca Node.js para buscar e obter mídias do YouTube via yt-dlp.",
+  "version": "1.1.0",
+  "description": "Pesquisa e downloads do YouTube com motor JavaScript, sem yt-dlp.",
   "main": "index.js",
   "type": "commonjs",
   "scripts": {
@@ -25,5 +25,9 @@
     "src",
     "README.md",
     "LICENSE"
-  ]
+  ],
+  "dependencies": {
+    "youtubei.js": "^18.1.0",
+    "ffmpeg-static": "^5.2.0"
+  }
 }
