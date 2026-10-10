@@ -4,7 +4,7 @@
 
 **Biblioteca Node.js para pesquisa, metadados e download de áudio e vídeo do YouTube.**
 
-![Version](https://img.shields.io/badge/version-1.0.1-38bdf8?style=flat-square)
+![Version](https://img.shields.io/badge/version-1.0.2-38bdf8?style=flat-square)
 ![Node](https://img.shields.io/badge/Node.js-22%2B-43853d?style=flat-square)
 ![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)
 
@@ -22,6 +22,7 @@
 - 🎬 **Vídeo**: obtenha a URL temporária do fluxo de vídeo.
 - 📥 **MP3**: converta e salve áudio no disco.
 - 📹 **MP4**: baixe e salve vídeo no disco.
+- 📱 **MP4 compatível**: prioriza H.264/AAC, valida codecs com FFprobe e converte pelo FFmpeg somente se necessário.
 - ⚙️ **Node.js**: uso em bots, aplicações e APIs.
 
 ## 📦 Instalação
@@ -112,6 +113,14 @@ console.log(video.path, video.size)
 | `video(url)` | Retorna `{ status, url, temporary: true }`. |
 | `mp3(url, options)` | Salva MP3. Retorna `{ status, path, filename, size }`. |
 | `mp4(url, options)` | Salva MP4. Retorna `{ status, path, filename, size }`. |
+
+### Compatibilidade de vídeo para WhatsApp
+
+Desde a versão 1.0.2, mp4() prioriza as faixas **H.264/AVC** e **AAC** do YouTube. O módulo verifica cada arquivo com FFprobe; quando encontrar codecs incompatíveis, converte usando **libx264 + yuv420p** e **AAC** com FFmpeg e valida novamente antes de devolver o caminho.
+
+Isso reduz casos em que o WhatsApp recebe MP4 sem imagem ou sem reprodução, mas não resolve vídeos indisponíveis, falhas de rede e limites de tamanho do WhatsApp.
+
+**No Termux:** instale `pkg install ffmpeg` e confira se os comandos `ffmpeg`, `ffprobe` e o encoder `libx264` estão disponíveis. Conversões podem demorar em celulares, principalmente com vídeos longos ou alta resolução. Para bots, sugerimos começar com qualidade 480.
 
 **Opções de download:** `quality` (MP3 em kbps; MP4 em altura máxima) e `outputDir` (diretório de saída).
 
