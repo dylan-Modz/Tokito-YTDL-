@@ -69,7 +69,7 @@ async function garantirMp4(arquivo) {
     const final = await analisar(temporario)
     if (final.video.codec_name !== 'h264' || final.video.pix_fmt !== 'yuv420p' ||
         (final.audio && final.audio.codec_name !== 'aac')) {
-      throw new Error('Não foi possível preparar o vídeo em H.264/AAC.')
+      throw new Error('Não foi possível preparar um vídeo compatível.')
     }
     const destino = path.join(path.dirname(arquivo), path.parse(arquivo).name + '.mp4')
     await fs.rename(temporario, destino)
