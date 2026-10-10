@@ -1,26 +1,26 @@
 'use strict'
 
-const { run, parseJSON } = require('./core')
 const { query, inteiro } = require('./validate')
+const { client, asText, thumb } = require('./engine')
 
 module.exports = async function search(texto, limite = 5) {
   const termo = query(texto)
   const quantidade = inteiro(limite, 5, 1, 20, 'Limite')
-  const output = await run([
-    '--flat-playlist', '--dump-single-json', '--skip-download',
-    '--ignore-errors', '--', 'ytsearch' + quantidade + ':' + termo
-  ], 90000)
-  const data = parseJSON(output)
-  const results = (data.entries || []).filter(Boolean).map(item => ({
-    id: item.id || null,
-    title: item.title || 'Sem título',
-    url: item.webpage_url || (item.id
-      ? 'https://www.youtube.com/watch?v=' + item.id : item.url),
-    duration: item.duration ?? null,
-    channel: item.channel || item.uploader || null,
-    thumbnail: item.id
-      ? 'https://i.ytimg.com/vi/' + item.id + '/hqdefault.jpg'
-      : (item.thumbnail || null)
-  }))
+  const yt = await client()
+  const data = await yt.search(termo, { type: 'video' })
+  const results = []
+  for (const item of data?.videos || []) {
+    const id = item?.id || item?.video_id
+    if (!/^[a-zA-Z0-9_-]{11}$/.test(id || '')) continue
+    const seconds = item?.duration?.seconds
+    results.push({
+      id, title: asText(item.title) || 'Sem título',
+      url: 'https://www.youtube.com/watch?v=' + id,
+      duration: typeof seconds === 'number' ? seconds : null,
+      channel: item?.author?.name || item?.channel?.name || null,
+      thumbnail: thumb(id, item)
+    })
+    if (results.length >= quantidade) break
+  }
   return { status: true, query: termo, results }
 }
