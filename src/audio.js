@@ -1,15 +1,8 @@
 'use strict'
-
-const { run } = require('./core')
-const { url } = require('./validate')
-
+const { getInfo, audioFormat, decipher } = require('./engine')
 module.exports = async function audio(link) {
-  const output = await run([
-    '--no-playlist', '-f', 'bestaudio/best', '-g', '--', url(link)
-  ], 90000)
-  const mediaUrl = output.split('\n').filter(Boolean)[0]
-  if (!mediaUrl || !/^https?:\/\//.test(mediaUrl)) {
-    throw new Error('Não foi possível obter um link de áudio válido.')
-  }
-  return { status: true, url: mediaUrl, temporary: true }
+  const { yt, data } = await getInfo(link)
+  const format = audioFormat(data)
+  const direct = await decipher(format, yt)
+  return { status: true, url: direct, temporary: true, mimetype: format.mime_type?.split(';')[0] || null }
 }
