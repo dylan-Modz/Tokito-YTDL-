@@ -68,28 +68,36 @@ test('seleção prioriza qualidade solicitada', () => {
   assert.equal(engine.audioFormat(data).itag, 140)
 })
 
-function hasFFmpeg() {
-  try { execFileSync('ffmpeg', ['-version'], { stdio: 'ignore' }); return true }
-  catch { return false }
+function ffmpegForTests() {
+  let bundled
+  try { bundled = require('ffmpeg-static') } catch {}
+  for (const executable of [process.env.TOKITO_FFMPEG, bundled, 'ffmpeg'].filter(Boolean)) {
+    try {
+      execFileSync(executable, ['-version'], { stdio: 'ignore' })
+      return executable
+    } catch {}
+  }
+  return null
 }
+const ffmpegTestBin = ffmpegForTests()
 
-test('MP3 real e MP4 válido sem yt-dlp', { skip: !hasFFmpeg() }, async () => {
+test('MP3 real e MP4 válido sem yt-dlp', { skip: !ffmpegTestBin }, async () => {
   const mp3Source = path.join(dir, 'source.m4a')
   const mp4Source = path.join(dir, 'source.mp4')
   const videoSource = path.join(dir, 'v480.mp4')
-  execFileSync('ffmpeg', ['-loglevel', 'error', '-y', '-f', 'lavfi', '-i', 'sine=frequency=450:sample_rate=44100', '-t', '1', '-c:a', 'aac', mp3Source], { timeout: 30000 })
-  execFileSync('ffmpeg', [
+  execFileSync(ffmpegTestBin, ['-loglevel', 'error', '-y', '-f', 'lavfi', '-i', 'sine=frequency=450:sample_rate=44100', '-t', '1', '-c:a', 'aac', mp3Source], { timeout: 30000 })
+  execFileSync(ffmpegTestBin, [
     '-loglevel', 'error', '-y', '-f', 'lavfi', '-i', 'color=c=red:s=320x180:r=10',
     '-f', 'lavfi', '-i', 'sine=frequency=300:sample_rate=44100',
     '-t', '1', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-c:a', 'aac', mp4Source
   ], { timeout: 30000 })
-  execFileSync('ffmpeg', [
+  execFileSync(ffmpegTestBin, [
     '-loglevel', 'error', '-y', '-f', 'lavfi', '-i', 'color=c=blue:s=640x480:r=10',
     '-t', '1', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-an', videoSource
   ], { timeout: 30000 })
   media = { 140: fs.readFileSync(mp3Source), 18: fs.readFileSync(mp4Source), 135: fs.readFileSync(videoSource) }
   const prev = process.env.TOKITO_FFMPEG
-  process.env.TOKITO_FFMPEG = 'ffmpeg'
+  process.env.TOKITO_FFMPEG = ffmpegTestBin
   try {
     const [a, a2] = await Promise.all([
       yt.mp3(link, { outputDir: dir, quality: 128 }),

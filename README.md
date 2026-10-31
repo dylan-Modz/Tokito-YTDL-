@@ -4,7 +4,7 @@
 
 **Biblioteca Node.js para pesquisa, informações e download de mídias do YouTube.**
 
-![Version](https://img.shields.io/badge/version-1.1.2-38bdf8?style=flat-square)
+![Version](https://img.shields.io/badge/version-1.1.3-38bdf8?style=flat-square)
 ![Node.js](https://img.shields.io/badge/Node.js-22%2B-43853d?style=flat-square)
 ![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)
 
@@ -118,7 +118,7 @@ npm run test:live -- "https://www.youtube.com/watch?v=SEU_ID" --video
 
 Os arquivos temporários dos testes são eliminados ao terminar. Se o servidor receber erros como `403`, `429`, `Sign in` ou `Bot verification`, é possível que o IP da hospedagem esteja bloqueado pelo YouTube. Atualizar o módulo não garante a remoção de bloqueios na rede.
 
-### Melhorias da versão 1.1.2
+### Melhorias da versão 1.1.3
 
 - Dependência mínima atualizada para YouTube.js 18.3.0.
 - Caso a consulta básica retorne um vídeo sem faixas, tenta carregar as informações completas.
@@ -127,3 +127,7 @@ Os arquivos temporários dos testes são eliminados ao terminar. Se o servidor r
 - Diagnóstico mais claro ao falhar o download e teste opcional com vídeo real.
 
 - Ao detectar formatos ausentes, também tenta as variantes de consulta ANDROID e TV_EMBEDDED. Isso pode ajudar em alguns ambientes, mas não contorna bloqueios de IP.
+
+### Resultado de diagnóstico na rede do GitHub Actions
+
+A extração real pode falhar com `LOGIN_REQUIRED: Faça login para confirmar que você não é um bot`. Esse erro foi observado em testes na rede do GitHub Actions em 31/10/2026; não prova que o serviço falhará na sua própria hospedagem. A biblioteca não tenta burlar autenticação ou proteção do YouTube. Os testes locais agora usam o executável `ffmpeg-static` quando o FFmpeg não estiver instalado no sistema.
