@@ -91,7 +91,12 @@ test('MP3 real e MP4 válido sem yt-dlp', { skip: !hasFFmpeg() }, async () => {
   const prev = process.env.TOKITO_FFMPEG
   process.env.TOKITO_FFMPEG = 'ffmpeg'
   try {
-    const a = await yt.mp3(link, { outputDir: dir, quality: 128 })
+    const [a, a2] = await Promise.all([
+      yt.mp3(link, { outputDir: dir, quality: 128 }),
+      yt.mp3(link, { outputDir: dir, quality: 128 })
+    ])
+    assert.notEqual(a.path, a2.path, 'downloads simultâneos devem usar arquivos distintos')
+    assert.ok(a2.size > 100)
     const v = await yt.mp4(link, { outputDir: dir, quality: 360 })
     const h = await yt.mp4(link, { outputDir: dir, quality: 480 })
     assert.ok(a.size > 100 && v.size > 100 && h.size > 100)
@@ -110,4 +115,39 @@ test('arquivos falsos são rejeitados', async () => {
   const fake = path.join(dir, 'fake.mp4')
   await fsp.writeFile(fake, 'not a video')
   await assert.rejects(require('../src/download').validateFile(fake, 'mp4'), /formato inválido/)
+})
+
+test('resposta básica sem formatos usa getInfo completo', async () => {
+  let calls = 0
+  engine.setTestClient({
+    ...client,
+    async getBasicInfo(videoId) {
+      assert.equal(videoId, id)
+      return { basic_info: { id, title: 'Teste' }, streaming_data: { formats: [], adaptive_formats: [] } }
+    },
+    async getInfo(videoId) {
+      calls++
+      return client.getBasicInfo(videoId)
+    }
+  })
+  try {
+    const result = await yt.audio(link)
+    assert.equal(result.status, true)
+    assert.equal(calls, 1)
+  } finally {
+    engine.setTestClient(client)
+  }
+})
+
+test('quando YouTube não devolve faixas, informa a causa', async () => {
+  engine.setTestClient({
+    ...client,
+    async getBasicInfo() { return { basic_info: { id }, streaming_data: {} } },
+    async getInfo() { return { basic_info: { id }, streaming_data: {} } }
+  })
+  try {
+    await assert.rejects(yt.audio(link), /sem formatos de mídia/)
+  } finally {
+    engine.setTestClient(client)
+  }
 })

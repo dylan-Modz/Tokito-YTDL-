@@ -59,11 +59,32 @@ function mediaInfo(data, id) {
   }
 }
 
-async function getInfo(link) {
+async function getInfo(link, { requireFormats = false } = {}) {
   const id = idOf(link)
   const yt = await client()
-  const data = await yt.getBasicInfo(id)
+  let data = await yt.getBasicInfo(id)
   if (!data?.basic_info) throw new Error('YouTube não retornou informações desse vídeo.')
+
+  // O YouTube pode retornar metadados sem faixas de mídia na resposta básica.
+  // Nesses casos, tenta carregar a resposta completa antes de desistir.
+  if (requireFormats && formats(data).length === 0) {
+    let cause
+    if (typeof yt.getInfo === 'function') {
+      try {
+        const full = await yt.getInfo(id)
+        if (full?.basic_info) data = full
+      } catch (err) {
+        cause = err
+      }
+    }
+    if (formats(data).length === 0) {
+      throw new Error(
+        'O YouTube retornou o vídeo sem formatos de mídia. ' +
+        'Isso pode ser uma restrição do vídeo, bloqueio de IP ou mudança no YouTube.' +
+        (cause ? ' Detalhes: ' + cause.message : '')
+      )
+    }
+  }
   return { id, yt, data }
 }
 
@@ -102,7 +123,7 @@ function videoFormat(data, quality) {
 }
 
 async function decipher(format, yt) {
-  const direct = await format.decipher(yt.session.player)
+  const direct = await format.decipher(yt?.session?.player)
   if (typeof direct !== 'string' || !/^https:\/\//i.test(direct)) {
     throw new Error('Não foi possível obter a URL de mídia do YouTube.')
   }

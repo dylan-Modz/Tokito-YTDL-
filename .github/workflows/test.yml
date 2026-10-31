@@ -12,3 +12,13 @@ jobs:
           node-version: 22
       - run: npm install --no-audit --no-fund
       - run: npm test
+      - name: Verificar sintaxe dos arquivos
+        run: |
+          node --check index.js
+          node --check src/engine.js
+          node --check src/download.js
+          node --check scripts/smoke.js
+      - name: Testar áudio real do YouTube (diagnóstico)
+        continue-on-error: true
+        timeout-minutes: 7
+        run: npm run test:live -- "https://www.youtube.com/watch?v=aqz-KE-bpKQ"

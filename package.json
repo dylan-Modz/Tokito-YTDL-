@@ -1,11 +1,12 @@
 {
   "name": "tokito-ytdl",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Pesquisa e downloads do YouTube com motor JavaScript, sem yt-dlp.",
   "main": "index.js",
   "type": "commonjs",
   "scripts": {
-    "test": "node --test"
+    "test": "node --test",
+    "test:live": "node scripts/smoke.js"
   },
   "keywords": [
     "tokito",
@@ -27,7 +28,7 @@
     "LICENSE"
   ],
   "dependencies": {
-    "youtubei.js": "^18.1.0",
+    "youtubei.js": "^18.3.0",
     "ffmpeg-static": "^5.2.0"
   }
 }

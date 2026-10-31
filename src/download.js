@@ -14,10 +14,8 @@ function ffmpegPath() {
   let executable = null
   try { executable = require('ffmpeg-static') } catch {}
   const bin = override || executable
-  if (!bin) {
-    throw new Error('FFmpeg do npm indisponível. Instale novamente as dependências com npm install e confira se a hospedagem permite executar binários.')
-  }
-  return bin
+  // A instalação pode ter FFmpeg de sistema, mesmo sem o binário do npm.
+  return bin || 'ffmpeg'
 }
 
 function ffmpeg(args, timeout = 600000) {
@@ -58,13 +56,21 @@ function optionsDir(options) {
 function filename(info, ext) {
   const title = String(info.title || 'youtube').replace(/[\\/:*?"<>|\u0000-\u001f]+/g, '')
     .replace(/\s+/g, ' ').trim().slice(0, 75) || 'youtube'
-  return title + ' [' + info.id + '].' + ext
+  // Não sobrescreve outro download do mesmo vídeo em requisições simultâneas.
+  return title + ' [' + info.id + '] [' + crypto.randomUUID().slice(0, 12) + '].' + ext
 }
 
 async function streamFile(info, format, destination) {
-  const stream = await info.download({ itag: format.itag })
-  if (!stream) throw new Error('YouTube não retornou um fluxo de mídia.')
-  await pipeline(stream, fs.createWriteStream(destination))
+  let stream
+  try {
+    stream = await info.download({ itag: format.itag })
+    if (!stream) throw new Error('Fluxo de mídia vazio')
+    await pipeline(stream, fs.createWriteStream(destination))
+  } catch (err) {
+    await fsp.rm(destination, { force: true }).catch(() => {})
+    throw new Error('Falha ao baixar a faixa ' + format.itag +
+      ' do YouTube: ' + err.message, { cause: err })
+  }
   const stat = await fsp.stat(destination)
   if (!stat.isFile() || stat.size === 0) throw new Error('O YouTube retornou uma mídia vazia.')
 }
@@ -91,7 +97,7 @@ async function validateFile(file, type) {
 async function mp3(link, options = {}) {
   const quality = inteiro(options?.quality, 128, 64, 320, 'Qualidade de áudio (kbps)')
   const dir = optionsDir(options)
-  const { data, id } = await getInfo(link)
+  const { data, id } = await getInfo(link, { requireFormats: true })
   const metadata = mediaInfo(data, id)
   const format = audioFormat(data)
   await fsp.mkdir(dir, { recursive: true })
@@ -113,7 +119,7 @@ async function mp3(link, options = {}) {
 async function mp4(link, options = {}) {
   const quality = inteiro(options?.quality, 720, 144, 2160, 'Resolução máxima (p)')
   const dir = optionsDir(options)
-  const { data, id } = await getInfo(link)
+  const { data, id } = await getInfo(link, { requireFormats: true })
   const metadata = mediaInfo(data, id)
   const format = videoFormat(data, quality)
   if (!format) throw new Error('Não há vídeo MP4 disponível até ' + quality + 'p.')
