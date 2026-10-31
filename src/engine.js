@@ -65,23 +65,34 @@ async function getInfo(link, { requireFormats = false } = {}) {
   let data = await yt.getBasicInfo(id)
   if (!data?.basic_info) throw new Error('YouTube não retornou informações desse vídeo.')
 
-  // O YouTube pode retornar metadados sem faixas de mídia na resposta básica.
-  // Nesses casos, tenta carregar a resposta completa antes de desistir.
+  // Em algumas respostas a API do YouTube retorna metadados, mas não
+  // disponibiliza as faixas de mídia. Tenta outras consultas oficiais.
   if (requireFormats && formats(data).length === 0) {
-    let cause
-    if (typeof yt.getInfo === 'function') {
+    let lastError
+    const attempts = [
+      () => yt.getInfo(id),
+      () => yt.getBasicInfo(id, { client: 'ANDROID' }),
+      () => yt.getBasicInfo(id, { client: 'TV_EMBEDDED' })
+    ]
+    for (const attempt of attempts) {
       try {
-        const full = await yt.getInfo(id)
-        if (full?.basic_info) data = full
+        const recovered = await attempt()
+        if (recovered?.basic_info && formats(recovered).length > 0) {
+          data = recovered
+          break
+        }
       } catch (err) {
-        cause = err
+        lastError = err
       }
     }
     if (formats(data).length === 0) {
+      const state = data?.playability_status
+      const description = [state?.status, asText(state?.reason)].filter(Boolean).join(': ')
       throw new Error(
         'O YouTube retornou o vídeo sem formatos de mídia. ' +
-        'Isso pode ser uma restrição do vídeo, bloqueio de IP ou mudança no YouTube.' +
-        (cause ? ' Detalhes: ' + cause.message : '')
+        'Pode haver restrição do vídeo, bloqueio de IP da hospedagem ou alteração no YouTube.' +
+        (description ? ' Reprodução: ' + description + '.' : '') +
+        (lastError ? ' Último erro: ' + lastError.message : '')
       )
     }
   }

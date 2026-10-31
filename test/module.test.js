@@ -151,3 +151,25 @@ test('quando YouTube não devolve faixas, informa a causa', async () => {
     engine.setTestClient(client)
   }
 })
+
+test('testa o cliente ANDROID quando outras consultas não têm formato', async () => {
+  let checkedAndroid = false
+  engine.setTestClient({
+    ...client,
+    async getBasicInfo(videoId, options) {
+      assert.equal(videoId, id)
+      if (options?.client === 'ANDROID') {
+        checkedAndroid = true
+        return client.getBasicInfo(videoId)
+      }
+      return { basic_info: { id }, streaming_data: {} }
+    },
+    async getInfo() { return { basic_info: { id }, streaming_data: {} } }
+  })
+  try {
+    assert.equal((await yt.audio(link)).status, true)
+    assert.equal(checkedAndroid, true)
+  } finally {
+    engine.setTestClient(client)
+  }
+})
